@@ -12,6 +12,13 @@ SECRET_KEY = "your-secret-key-for-jwt-token" # In production, this should be in 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 
+# Bcrypt/Passlib compatibility shim for modern bcrypt versions
+import bcrypt
+if not hasattr(bcrypt, "__about__"):
+    class About:
+        __version__ = getattr(bcrypt, "__version__", "4.0.0")
+    bcrypt.__about__ = About()
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="api/auth/login", auto_error=False)
