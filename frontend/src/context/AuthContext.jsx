@@ -2,6 +2,8 @@ import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+import { API_URL } from '../apiConfig';
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -27,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     if (!userToken) return;
     try {
       axios.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
-      const response = await axios.get('http://localhost:8000/api/auth/me');
+      const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data);
       return response.data;
     } catch (error) {
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await axios.post('http://localhost:8000/api/auth/login', { email, password });
+    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
     const newToken = response.data.access_token;
     setToken(newToken);
     
@@ -54,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const response = await axios.post('http://localhost:8000/api/auth/register', { name, email, password });
+    const response = await axios.post(`${API_URL}/auth/register`, { name, email, password });
     if(response.data) {
       await login(email, password);
     }

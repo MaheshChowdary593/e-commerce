@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../apiConfig';
 
 const CartContext = createContext();
 
@@ -22,7 +23,7 @@ export const CartProvider = ({ children }) => {
   const loadCart = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/api/cart');
+      const response = await axios.get(`${API_URL}/cart`);
       const mappedCart = response.data.map(item => ({
         ...item,
         id: item.product_id
@@ -45,7 +46,7 @@ export const CartProvider = ({ children }) => {
       const existingItem = cart.find(item => item.product_id === product.id);
       const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
       
-      await axios.post('http://localhost:8000/api/cart', {
+      await axios.post(`${API_URL}/cart`, {
         product_id: product.id,
         quantity: newQuantity
       });
@@ -65,7 +66,7 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = async (productId) => {
     try {
-      await axios.delete(`http://localhost:8000/api/cart/${productId}`);
+      await axios.delete(`${API_URL}/cart/${productId}`);
       await loadCart();
     } catch (err) {
       console.error("Failed to remove from cart", err);
@@ -74,7 +75,7 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = async (productId, quantity) => {
     try {
-      await axios.post('http://localhost:8000/api/cart', {
+      await axios.post(`${API_URL}/cart`, {
         product_id: productId,
         quantity: Math.max(1, quantity)
       });
@@ -86,7 +87,7 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = async () => {
     try {
-      await axios.delete('http://localhost:8000/api/cart');
+      await axios.delete(`${API_URL}/cart`);
       setCart([]);
     } catch (err) {
       console.error("Failed to clear cart", err);

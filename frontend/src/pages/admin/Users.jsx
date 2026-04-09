@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, UserX, UserCheck, Trash2, Mail, Calendar } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../apiConfig';
 import './Users.css';
 
 const Users = () => {
@@ -9,7 +10,7 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/admin/users');
+      const response = await axios.get(`${API_URL}/admin/users`);
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -24,7 +25,7 @@ const Users = () => {
 
   const handleBlockToggle = async (userId, isBlocked) => {
     try {
-      await axios.post(`http://localhost:8000/api/admin/users/${userId}/block?block=${!isBlocked}`);
+      await axios.post(`${API_URL}/admin/users/${userId}/block?block=${!isBlocked}`);
       fetchUsers();
     } catch (error) {
       console.error('Error toggling block status:', error);

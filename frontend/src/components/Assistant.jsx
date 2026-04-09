@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Assistant.css';
+import { API_URL } from '../apiConfig';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = API_URL;
 
 const Assistant = () => {
   const [isOpen, setIsOpen] = useState(false);

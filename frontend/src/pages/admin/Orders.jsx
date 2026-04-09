@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, FileText, ExternalLink, Calendar } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../apiConfig';
 import './Orders.css';
 
 const Orders = () => {
@@ -9,7 +10,7 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/admin/dashboard');
+      const response = await axios.get(`${API_URL}/admin/dashboard`);
       setOrders(response.data.recent_orders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -24,7 +25,7 @@ const Orders = () => {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await axios.put(`http://localhost:8000/api/admin/orders/${orderId}/status?status=${newStatus}`);
+      await axios.put(`${API_URL}/admin/orders/${orderId}/status?status=${newStatus}`);
       fetchOrders();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -33,7 +34,7 @@ const Orders = () => {
 
   const downloadInvoice = async (orderId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/admin/orders/invoice/${orderId}`, {
+      const response = await axios.get(`${API_URL}/admin/orders/invoice/${orderId}`, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './Footer.css';
+import { API_URL } from '../apiConfig';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ const Footer = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/newsletter', { email });
+      const response = await axios.post(`${API_URL}/newsletter`, { email });
       if (response.data.status === 'success') {
         alert(response.data.message || "Subscribed successfully!");
         setEmail('');

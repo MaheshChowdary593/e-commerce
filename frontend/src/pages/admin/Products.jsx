@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Filter, Upload } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../apiConfig';
 import './Products.css';
 
 const Products = () => {
@@ -18,7 +19,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/admin/products');
+      const response = await axios.get(`${API_URL}/admin/products`);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -53,7 +54,7 @@ const Products = () => {
     }
 
     try {
-      await axios.post('http://localhost:8000/api/admin/products', data);
+      await axios.post(`${API_URL}/admin/products`, data);
       setShowModal(false);
       fetchProducts();
     } catch (error) {

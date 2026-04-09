@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { API_URL } from '../apiConfig';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = API_URL;
 
 export const useSearch = (initialQuery = '') => {
   const [query, setQuery] = useState(initialQuery);

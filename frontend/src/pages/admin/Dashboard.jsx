@@ -17,6 +17,7 @@ import {
   Area
 } from 'recharts';
 import axios from 'axios';
+import { API_URL } from '../../apiConfig';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -42,7 +43,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/admin/dashboard', {
+        const response = await axios.get(`${API_URL}/admin/dashboard`, {
              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setDashboardData(response.data);
