@@ -14,4 +14,4 @@ pymongo
 cloudinary
 reportlab
 pandas
-google-generativeai
+gunicorn
