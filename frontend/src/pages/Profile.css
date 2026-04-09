@@ -1,0 +1,147 @@
+.profile-page {
+  padding: 40px 0;
+  min-height: 80vh;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.profile-sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+}
+
+.user-info-card {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+}
+
+.user-info-card h3 {
+  margin: 0;
+  color: #333;
+}
+
+.user-info-card p {
+  color: #888;
+  font-size: 14px;
+  margin: 5px 0 0;
+}
+
+.profile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-nav a {
+  padding: 12px 15px;
+  border-radius: 8px;
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.profile-nav a:hover, .profile-nav a.active {
+  background: #f8f9fa;
+  color: #007bff;
+}
+
+.logout-btn-sidebar {
+  margin-top: 20px;
+  padding: 12px 15px;
+  background: none;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+}
+
+.logout-btn-sidebar:hover {
+  background: #fef2f2;
+}
+
+.welcome-banner {
+  background: #1a1a1a;
+  color: white;
+  padding: 40px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+}
+
+.welcome-banner h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+.welcome-banner p {
+  margin: 0;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.activity-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.activity-card:hover {
+  transform: translateY(-5px);
+}
+
+.activity-card .icon {
+  font-size: 32px;
+  margin-bottom: 15px;
+}
+
+.activity-card h4 {
+  margin: 0 0 5px;
+  color: #333;
+}
+
+.activity-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+@media (max-width: 768px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}

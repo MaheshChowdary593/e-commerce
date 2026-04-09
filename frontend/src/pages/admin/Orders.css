@@ -1,0 +1,42 @@
+.admin-orders { padding: 2rem; }
+
+.status-select {
+  border: 1px solid var(--admin-border);
+  background-color: #f9f9f9;
+  color: #333;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.status-select:hover {
+  background-color: #f8f9fa;
+  border-color: #000;
+}
+
+/* All statuses map to a clean, uniform style for the store theme */
+.status-select.status-pending { background-color: white; color: #555; }
+.status-select.status-shipped { background-color: #f8f9fa; color: #333; }
+.status-select.status-delivered { background-color: #000; color: white; }
+.status-select.status-cancelled { background-color: white; color: #888; text-decoration: line-through; }
+.status-select.status-paid { background-color: #f9f9f9; color: #000; }
+
+.action-icon {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-icon:hover { background-color: #f8f9fa; }
+.admin-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;  }

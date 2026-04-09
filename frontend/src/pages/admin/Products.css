@@ -1,0 +1,109 @@
+.admin-products {
+  padding: 2rem;
+}
+
+.admin-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  width: 320px;
+}
+
+.admin-search-bar input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.admin-search-bar input:focus { outline: none; }
+
+.add-btn {
+  background-color: #000;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.add-btn:hover { background-color: #333; transform: translateY(-1px); }
+
+.product-thumbnail {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.admin-badge {
+  background-color: #f9f9f9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #e0e0e0;
+}
+
+.stock-level {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.stock-level.low { color: #000; font-weight: 700; }
+
+.action-icon {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s;
+}
+
+.action-icon.edit { color: #007bff; }
+.action-icon.edit:hover { background-color: #f8f9fa; }
+.action-icon.delete { color: #000; }
+.action-icon.delete:hover { background-color: #f8f9fa; }
+
+/* Modal */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.admin-modal {
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.admin-form { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem; }
+.admin-form-group { display: flex; flex-direction: column; gap: 6px; }
+.admin-form-group label { font-size: 0.875rem; font-weight: 600; color: #333; }
+.admin-form-group input, .admin-form-group textarea { padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; }
+
+.admin-modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+.admin-btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
+.admin-btn.cancel { color: #555; background: none; }
+.admin-btn.submit { background-color: #000; color: white; }

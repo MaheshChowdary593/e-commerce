@@ -1,0 +1,52 @@
+.admin-users { padding: 2rem; }
+
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f9f9f9;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 1px solid #e0e0e0;
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid #e0e0e0;
+}
+
+.role-badge.admin { background-color: #f8f9fa; color: #000; }
+.role-badge.user { background-color: #ffffff; color: #555; }
+
+.status-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-text.active { color: #333; }
+.status-text.blocked { color: #888; text-decoration: line-through; }
+
+.status-text::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-text.active::before { background-color: #333; }
+.status-text.blocked::before { background-color: #888; }
+
+.action-icon.block:hover { color: #000; background-color: #f8f9fa; }
+.action-icon.unblock:hover { color: #333; background-color: #f8f9fa; }
+.action-icon.delete:hover { color: #000; background-color: #f8f9fa; }
