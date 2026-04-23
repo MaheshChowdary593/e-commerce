@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Assistant.css';
 import { API_URL } from '../apiConfig';
+import VoiceSearchButton from './VoiceSearchButton';
 
 const API_BASE = API_URL;
 
@@ -36,13 +37,17 @@ const Assistant = () => {
     switch (action) {
       case 'SEARCH_PRODUCT': {
         const params = new URLSearchParams();
+        params.set('mode', 'ai');
         if (data.query) params.set('q', data.query);
-        if (data.filters?.category) params.set('category', data.filters.category);
-        if (data.filters?.brand) params.set('brand', data.filters.brand);
-        if (data.filters?.price_min) params.set('price_min', data.filters.price_min);
-        if (data.filters?.price_max) params.set('price_max', data.filters.price_max);
+        if (data.category) params.set('category', data.category);
+        if (data.brand) params.set('brand', data.brand);
+        if (data.price_min) params.set('price_min', data.price_min);
+        if (data.price_max) params.set('price_max', data.price_max);
+        if (data.rating_min) params.set('rating_min', data.rating_min);
+        if (data.sort_by) params.set('sort_by', data.sort_by);
+        
         navigate(`/search?${params.toString()}`);
-        return `🔍 Searching for "${data.query || data.product_name || 'products'}"...`;
+        return `🔍 Finding the best "${data.query || data.product_name || 'products'}" with AI filters...`;
       }
       case 'ADD_TO_CART': {
         const name = data.product_name || data.query || 'the product';
@@ -155,6 +160,7 @@ const Assistant = () => {
           )}
 
           <form className="assistant-input-area" onSubmit={(e) => { e.preventDefault(); handleSend(); }}>
+            <VoiceSearchButton onTranscript={(t) => { setInput(t); setTimeout(handleSend, 100); }} className="assistant-voice-btn" />
             <input
               ref={inputRef}
               type="text"

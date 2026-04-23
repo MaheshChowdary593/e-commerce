@@ -16,6 +16,10 @@ const Products = () => {
     stock: '',
     image: null
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -41,6 +45,37 @@ const Products = () => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
 
+  const handleEdit = (product) => {
+    setFormData({
+      title: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      stock: product.stock,
+      image: null
+    });
+    setEditId(product.id);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/admin/products/${id}`);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product. Please check console for details.');
+    }
+  };
+
+  const confirmDelete = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
@@ -54,11 +89,17 @@ const Products = () => {
     }
 
     try {
-      await axios.post(`${API_URL}/admin/products`, data);
+      if (isEditing) {
+        await axios.put(`${API_URL}/admin/products/${editId}`, data);
+      } else {
+        await axios.post(`${API_URL}/admin/products`, data);
+      }
       setShowModal(false);
+      setIsEditing(false);
+      setEditId(null);
       fetchProducts();
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error saving product:', error);
     }
   };
 
@@ -110,8 +151,8 @@ const Products = () => {
                 </td>
                 <td>
                   <div className="flex gap-2">
-                    <button className="action-icon edit"><Edit2 size={16} /></button>
-                    <button className="action-icon delete"><Trash2 size={16} /></button>
+                    <button className="action-icon edit" onClick={() => handleEdit(product)}><Edit2 size={16} /></button>
+                    <button className="action-icon delete" onClick={() => confirmDelete(product)}><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
@@ -123,7 +164,7 @@ const Products = () => {
       {showModal && (
         <div className="admin-modal-overlay">
           <div className="admin-modal admin-card">
-            <h3>Add New Product</h3>
+            <h3>{isEditing ? 'Edit Product' : 'Add New Product'}</h3>
             <form onSubmit={handleSubmit} className="admin-form">
               <div className="admin-form-group">
                 <label>Title</label>
@@ -157,10 +198,27 @@ const Products = () => {
                 </div>
               </div>
               <div className="admin-modal-actions">
-                <button type="button" className="admin-btn cancel" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="admin-btn submit">Save Product</button>
+                <button type="button" className="admin-btn cancel" onClick={() => {
+                  setShowModal(false);
+                  setIsEditing(false);
+                  setEditId(null);
+                }}>Cancel</button>
+                <button type="submit" className="admin-btn submit">{isEditing ? 'Update Product' : 'Save Product'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal delete-modal admin-card">
+            <h3>Confirm Deletion</h3>
+            <p className="mb-6">Are you sure you want to delete <strong>{productToDelete?.name}</strong>? This action cannot be undone.</p>
+            <div className="admin-modal-actions">
+              <button className="admin-btn cancel" onClick={() => setShowDeleteModal(false)}>No, Keep it</button>
+              <button className="admin-btn delete-confirm" onClick={() => handleDelete(productToDelete.id)}>Yes, Delete Product</button>
+            </div>
           </div>
         </div>
       )}

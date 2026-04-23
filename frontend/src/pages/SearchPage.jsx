@@ -14,9 +14,10 @@ const SkeletonCard = () => (
 );
 
 const SearchPage = () => {
-  const { fetchData, loading } = useApi();
+  const { fetchData, postData, loading } = useApi();
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
+  const [aiFilters, setAiFilters] = useState(null);
   const [sortBy, setBy] = useState('popularity');
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const location = useLocation();
@@ -26,34 +27,45 @@ const SearchPage = () => {
   const priceMin = searchParams.get('price_min') || '';
   const priceMax = searchParams.get('price_max') || '';
   const brand = searchParams.get('brand') || '';
+  const mode = searchParams.get('mode') || 'standard';
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const ITEMS_PER_PAGE = 40; // Increased limit to find enough items after filtering
 
   useEffect(() => {
-    // Reset products when search params change
+    // Reset products and AI filters when search params change
     setProducts([]);
+    setAiFilters(null);
     setPage(1);
     setHasMore(true);
-  }, [query, category, priceMin, priceMax, brand]);
+  }, [query, category, priceMin, priceMax, brand, mode]);
 
   useEffect(() => {
     const loadResults = async () => {
       try {
         let results = [];
         const skip = (page - 1) * ITEMS_PER_PAGE;
-        const params = { limit: ITEMS_PER_PAGE, skip };
         
-        if (query) params.q = query;
-        if (category) params.category = category;
-        if (priceMin) params.price_min = priceMin;
-        if (priceMax) params.price_max = priceMax;
-        if (brand) params.brand = brand;
-        
-        results = await fetchData('products/search', params);
-
-        if (results.length === 0 || results.length < ITEMS_PER_PAGE / 2) {
-          setHasMore(false);
+        if (mode === 'ai' && query && page === 1) {
+          // AI Mode: Call the POST endpoint for parsing + searching
+          // Note: Pagination for AI special mode is handled differently in this simplified version
+          const response = await postData('api/search-ai', { query, user_id: null });
+          results = response.products;
+          setAiFilters(response.filters);
+          setHasMore(false); // AI search is currently single-page
+        } else {
+          // Standard Mode
+          const params = { limit: ITEMS_PER_PAGE, skip };
+          if (query) params.q = query;
+          if (category) params.category = category;
+          if (priceMin) params.price_min = priceMin;
+          if (priceMax) params.price_max = priceMax;
+          if (brand) params.brand = brand;
+          
+          results = await fetchData('products/search', params);
+          if (results.length === 0 || results.length < ITEMS_PER_PAGE / 2) {
+            setHasMore(false);
+          }
         }
         
         setProducts(prev => page === 1 ? results : [...prev, ...results]);
@@ -62,7 +74,7 @@ const SearchPage = () => {
       }
     };
     loadResults();
-  }, [query, category, priceMin, priceMax, brand, page]);
+  }, [query, category, priceMin, priceMax, brand, mode, page]);
 
   // Infinite Scroll logic
   const loaderRef = React.useRef(null);
@@ -146,6 +158,27 @@ const SearchPage = () => {
         </aside>
 
         <main className="results-main">
+          {aiFilters && (
+            <div className="ai-filters-chips">
+              <span className="chips-label">AI Extracted Filters:</span>
+              <div className="chips-list">
+                {aiFilters.category && <span className="chip">Category: {aiFilters.category}</span>}
+                {aiFilters.brand && <span className="chip">Brand: {aiFilters.brand}</span>}
+                {(aiFilters.price_min || aiFilters.price_max) && (
+                  <span className="chip">
+                    Price: {aiFilters.price_min || 0} - {aiFilters.price_max || 'Any'}
+                  </span>
+                )}
+                {aiFilters.color && <span className="chip">Color: {aiFilters.color}</span>}
+                {aiFilters.size && <span className="chip">Size: {aiFilters.size}</span>}
+                {aiFilters.rating_min && <span className="chip">Rating: {aiFilters.rating_min}+</span>}
+                {aiFilters.features?.map(f => (
+                  <span key={f} className="chip feature">{f}</span>
+                ))}
+                {aiFilters.sort_by && <span className="chip sort">Sort: {aiFilters.sort_by}</span>}
+              </div>
+            </div>
+          )}
 
           <div className="product-grid-container">
             <div className="product-grid">

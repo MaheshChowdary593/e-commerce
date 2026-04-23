@@ -1,5 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
 import './ProductCard.css';
 
@@ -22,7 +22,11 @@ const ProductCard = ({ product, onAddToCart }) => {
           }}
           title={favorited ? 'Remove from Favorites' : 'Add to Favorites'}
         >
-          {favorited ? '❤️' : '♡'}
+          <Heart 
+            size={20} 
+            fill={favorited ? "#ef4444" : "none"} 
+            strokeWidth={favorited ? 0 : 2}
+          />
         </button>
 
         {hasDiscount && (

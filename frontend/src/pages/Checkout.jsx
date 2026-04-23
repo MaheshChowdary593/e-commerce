@@ -38,7 +38,7 @@ const Checkout = () => {
 
       // 2. Open Razorpay Modal
       const options = {
-        key: "rzp_test_YOUR_KEY_ID", // This should be from env in a real app
+        key: "rzp_test_SbMCiOLIhLt0lX", 
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "Shopsea",
@@ -54,8 +54,7 @@ const Checkout = () => {
             });
             
             clearCart();
-            alert("Payment Successful!");
-            navigate('/orders');
+            navigate(`/payment-success?orderId=${response.razorpay_order_id}`);
           } catch (err) {
             alert("Payment verification failed. Please contact support.");
           }

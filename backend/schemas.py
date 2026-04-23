@@ -220,3 +220,30 @@ class AssistantAction(BaseModel):
 
 class AssistantRequest(BaseModel):
     message: str
+
+
+class NaturalLanguageQueryRequest(BaseModel):
+    query: str
+
+class MongoQueryResponse(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    brand: Optional[str] = None
+    price: Optional[dict] = None
+    sort: Optional[str] = None
+
+class AISearchRequest(BaseModel):
+    query: str
+    user_id: Optional[str] = None
+
+class StructuredQuery(BaseModel):
+    query: Optional[str] = ""
+    category: Optional[str] = ""
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    brand: Optional[str] = ""
+    color: Optional[str] = ""
+    size: Optional[str] = ""
+    rating_min: Optional[float] = None
+    sort_by: Optional[str] = ""
+    features: Optional[List[str]] = []

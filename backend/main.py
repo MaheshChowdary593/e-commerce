@@ -134,6 +134,7 @@ def get_categories(response: Response, db = Depends(get_db)):
 
 import admin_routes
 from utils.product_utils import map_product
+from utils.mistral_utils import parse_query_with_mistral
 
 app.include_router(admin_routes.router)
 
@@ -170,7 +171,7 @@ def get_products(
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
             
     print(f"GET /api/products: cat={category}, query={query}")
-    products = list(db.products.find(query).skip(skip).limit(limit))
+    products = list(db.products.find(query).sort("created_at", -1).skip(skip).limit(limit))
     print(f"Found {len(products)} products")
     return [map_product(p) for p in products]
 
@@ -192,12 +193,6 @@ def search_products(
     and_clauses = []
     
     if q:
-        keywords = [word.rstrip('s').rstrip('es') for word in q.lower().split() if len(word) > 2]
-        if not keywords:
-            keywords = [q.lower() if q else ""]
-            
-        keyword_regex = "|".join(keywords)
-        
         # Store search history
         if user_id:
             history_entry = {
@@ -207,13 +202,20 @@ def search_products(
             }
             db.search_history.insert_one(history_entry)
             
-        and_clauses.append({
-            "$or": [
-                {"title": {"$regex": keyword_regex, "$options": "i"}},
-                {"category": {"$regex": keyword_regex, "$options": "i"}},
-                {"brand": {"$regex": keyword_regex, "$options": "i"}}
-            ]
-        })
+        # Clean and split query into individual keywords
+        keywords = [word.rstrip('s').rstrip('es') for word in q.lower().split() if len(word) > 2]
+        if not keywords:
+            keywords = [q.lower().strip()]
+            
+        # Robust Keyword Matching: EVERY keyword must match at least one field
+        for kw in keywords:
+            and_clauses.append({
+                "$or": [
+                    {"title": {"$regex": kw, "$options": "i"}},
+                    {"category": {"$regex": kw, "$options": "i"}},
+                    {"brand": {"$regex": kw, "$options": "i"}}
+                ]
+            })
         
     if category:
         norm_cat = category.lower().rstrip('s').rstrip('es')
@@ -246,7 +248,7 @@ def search_products(
     
     if price_min is None and price_max is None:
         # Optimized path to prevent fetching thousands of products into memory
-        cursor = db.products.find(query).skip(skip).limit(limit)
+        cursor = db.products.find(query).sort("created_at", -1).skip(skip).limit(limit)
         products_slice = [map_product(p) for p in cursor]
         print(f"Optimized search returning slice of {len(products_slice)}")
         return products_slice
@@ -705,12 +707,160 @@ def parse_assistant_query(message: str):
     return {"action": "SEARCH_PRODUCT", "query": query or msg, "filters": filters, "product_name": query, "index": idx}
 
 @app.post("/api/assistant")
-def assistant_chat(request: schemas.AssistantRequest):
+def assistant_chat(request: schemas.AssistantRequest, db = Depends(get_db), current_user: Optional[schemas.User] = Depends(auth.get_current_user_optional)):
+    """
+    Unified AI Assistant using Mistral.
+    Handles Search, Cart, and Recommendations with the same NLP intelligence.
+    """
     try:
-        result = parse_assistant_query(request.message)
+        user_id = current_user.id if current_user else None
+        
+        # 1. Parse unified intent with Mistral
+        result = parse_query_with_mistral(request.message)
+        
+        # 2. Apply personalized "cheap" threshold if needed
+        if result.get("price_max") == -1:
+            threshold = 1000
+            if user_id:
+                orders = list(db.orders.find({"user_id": user_id}).sort("created_at", -1).limit(10))
+                if orders:
+                    avg_order = sum(o.get("total_price", 0) for o in orders) / len(orders)
+                    threshold = max(500, avg_order * 0.7)
+            result["price_max"] = threshold
+            
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Assistant error: {str(e)}")
+        raise HTTPException(status_code=500, detail="AI Assistant currently unavailable")
+
+@app.post("/api/search-ai")
+def ai_search_products(request: schemas.AISearchRequest, db = Depends(get_db)):
+    """
+    Advanced Natural Language Search using Mistral AI.
+    Calculates personalized thresholds and maps AI output to complex MongoDB queries.
+    """
+    user_query = request.query
+    user_id = request.user_id
+    
+    # 1. Parse query with Mistral
+    structured = parse_query_with_mistral(user_query)
+    
+    with open("debug_ai.log", "a") as f:
+        f.write(f"\nUser Query: {user_query}\nMistral Struct: {json.dumps(structured)}\n")
+    
+    # 2. Handle Personalized "Cheap" Threshold
+    if structured.get("price_max") == -1:
+        threshold = 1000 # Default
+        if user_id:
+            orders = list(db.orders.find({"user_id": user_id}).sort("created_at", -1).limit(10))
+            if orders:
+                avg_order = sum(o.get("total_price", 0) for o in orders) / len(orders)
+                threshold = max(500, avg_order * 0.7)
+        structured["price_max"] = threshold
+
+    # 3. Build MongoDB Query with Robust Category Mapping
+    def build_query(data, soft=False):
+        and_clauses = []
+        
+        # Core query term with strict and-based keyword matching
+        q = data.get("query")
+        if q:
+            keywords = [word.rstrip('s').rstrip('es') for word in q.lower().split() if len(word) > 2]
+            if not keywords: keywords = [q.lower()]
+            
+            for kw in keywords:
+                and_clauses.append({
+                    "$or": [
+                        {"title": {"$regex": kw, "$options": "i"}},
+                        {"category": {"$regex": kw, "$options": "i"}},
+                        {"brand": {"$regex": kw, "$options": "i"}},
+                        {"description": {"$regex": kw, "$options": "i"}}
+                    ]
+                })
+            
+        # Category Mapping (Using SUB_CATEGORIES logic)
+        cat_name = data.get("category")
+        if cat_name:
+            norm_cat = cat_name.lower().rstrip('s').rstrip('es')
+            sub_cat = next((c for c in SUB_CATEGORIES if norm_cat in c["name"].lower() or c["query"] in norm_cat), None)
+            
+            if sub_cat:
+                cat_or = {
+                    "$or": [
+                        {"title": {"$regex": sub_cat["query"], "$options": "i"}},
+                        {"category": {"$regex": sub_cat["query"], "$options": "i"}},
+                        {"brand": {"$regex": sub_cat["query"], "$options": "i"}}
+                    ]
+                }
+                and_clauses.append(cat_or)
+                if "exclude" in sub_cat:
+                    and_clauses.append({"title": {"$not": {"$regex": sub_cat["exclude"], "$options": "i"}}})
+            else:
+                and_clauses.append({"category": {"$regex": cat_name, "$options": "i"}})
+        
+        # Strict filters (ignored in soft mode)
+        if not soft:
+            if data.get("brand"):
+                and_clauses.append({"brand": {"$regex": data["brand"], "$options": "i"}})
+            if data.get("color"):
+                and_clauses.append({"$or": [{"title": {"$regex": data["color"], "$options": "i"}}, {"tags": {"$regex": data["color"], "$options": "i"}}]})
+            if data.get("size"):
+                and_clauses.append({"$or": [{"title": {"$regex": data["size"], "$options": "i"}}, {"tags": {"$regex": f"\\b{data['size']}\\b", "$options": "i"}}]})
+            if data.get("rating_min"):
+                and_clauses.append({"$or": [{"rating": {"$gte": data["rating_min"]}}, {"average_rating": {"$gte": data["rating_min"]}}]})
+            if data.get("features"):
+                for feature in data["features"]:
+                    and_clauses.append({"$or": [{"tags": {"$regex": feature, "$options": "i"}}, {"description": {"$regex": feature, "$options": "i"}}, {"title": {"$regex": feature, "$options": "i"}}]})
+                    
+        return {"$and": and_clauses} if and_clauses else {}
+
+    # 4. Sorting & Fetching
+    sort_criteria = []
+    sort_type = structured.get("sort_by")
+    if sort_type == "price_low": sort_criteria = [("selling_price", 1)]
+    elif sort_type == "price_high": sort_criteria = [("selling_price", -1)]
+    elif sort_type == "rating": sort_criteria = [("average_rating", -1), ("rating", -1)]
+    elif sort_type == "newest": sort_criteria = [("created_at", -1)]
+
+    # Stage 1: Attempt search with all filters
+    mongo_query = build_query(structured)
+    cursor = db.products.find(mongo_query)
+    if sort_criteria: cursor = cursor.sort(sort_criteria)
+    
+    p_min = structured.get("price_min")
+    p_max = structured.get("price_max")
+    
+    results = []
+    from utils.product_utils import map_product
+    
+    for p in cursor.limit(80):
+        mapped = map_product(p)
+        if p_min is not None and mapped.final_price < p_min: continue
+        if p_max is not None and mapped.final_price > p_max: continue
+        results.append(mapped)
+
+    # Stage 2: Soft Fallback if no results (Ignore brand/color/size/features)
+    if not results and (structured.get("brand") or structured.get("color") or structured.get("features")):
+        soft_query = build_query(structured, soft=True)
+        cursor = db.products.find(soft_query)
+        if sort_criteria: cursor = cursor.sort(sort_criteria)
+        for p in cursor.limit(40):
+            mapped = map_product(p)
+            if p_min is not None and mapped.final_price < p_min: continue
+            if p_max is not None and mapped.final_price > p_max: continue
+            results.append(mapped)
+
+    # Final Fallback: Trending fallback if still nothing
+    if not results:
+        results = [map_product(p) for p in db.products.find().sort("rating", -1).limit(10)]
+        
+    return {"products": results, "filters": structured}
+
+@app.post("/parse-query", response_model=schemas.MongoQueryResponse)
+def parse_query(request: schemas.NaturalLanguageQueryRequest):
+    try:
+        return parse_query_with_mistral(request.query)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Parsing error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

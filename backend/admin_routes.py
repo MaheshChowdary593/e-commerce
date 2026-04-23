@@ -65,7 +65,7 @@ def get_sales_analytics(days: int = 30, current_admin: schemas.User = Depends(au
 
 @router.get("/products", response_model=List[schemas.Product])
 def get_all_products(limit: int = 100, skip: int = 0, current_admin: schemas.User = Depends(auth.get_current_admin), db = Depends(get_db)):
-    products = list(db.products.find().skip(skip).limit(limit))
+    products = list(db.products.find().sort("created_at", -1).skip(skip).limit(limit))
     from utils.product_utils import map_product
     return [map_product(p) for p in products]
 
@@ -103,6 +103,62 @@ async def create_product(
     }
     db.products.insert_one(new_product)
     return {"status": "success", "id": new_product["_id"]}
+
+@router.put("/products/{product_id}")
+async def update_product(
+    product_id: str,
+    title: str = Form(...),
+    description: str = Form(...),
+    price: float = Form(...),
+    category: str = Form(...),
+    stock: int = Form(...),
+    image: UploadFile = File(None),
+    current_admin: schemas.User = Depends(auth.get_current_admin),
+    db = Depends(get_db)
+):
+    update_data = {
+        "title": title,
+        "description": description,
+        "selling_price": price,
+        "actual_price": price,
+        "category": category,
+        "stock": stock,
+    }
+    
+    if image:
+        temp_path = f"temp_{image.filename}"
+        with open(temp_path, "wb") as buffer:
+            buffer.write(await image.read())
+        image_url = upload_image(temp_path)
+        import os
+        os.remove(temp_path)
+        update_data["images"] = [image_url]
+
+    result = db.products.update_one({"_id": product_id}, {"$set": update_data})
+    
+    if result.matched_count == 0:
+        # Fallback for datasets where id is 'id' or 'pid' instead of '_id'
+        result = db.products.update_one({"id": product_id}, {"$set": update_data})
+        if result.matched_count == 0:
+            result = db.products.update_one({"pid": product_id}, {"$set": update_data})
+            
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    return {"status": "success"}
+
+@router.delete("/products/{product_id}")
+def delete_product(product_id: str, current_admin: schemas.User = Depends(auth.get_current_admin), db = Depends(get_db)):
+    result = db.products.delete_one({"_id": product_id})
+    if result.deleted_count == 0:
+        result = db.products.delete_one({"id": product_id})
+        if result.deleted_count == 0:
+            result = db.products.delete_one({"pid": product_id})
+            
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    return {"status": "success"}
 
 @router.put("/orders/{order_id}/status")
 def update_order_status(order_id: str, status: str, current_admin: schemas.User = Depends(auth.get_current_admin), db = Depends(get_db)):

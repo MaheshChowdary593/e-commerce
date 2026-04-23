@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import CartModal from './components/CartModal'
@@ -24,11 +24,19 @@ import AdminUsers from './pages/admin/Users'
 import AdminCoupons from './pages/admin/Coupons'
 import AdminAnalytics from './pages/admin/Analytics'
 import AdminSettings from './pages/admin/Settings'
+import PaymentSuccess from './pages/PaymentSuccess'
 import Assistant from './components/Assistant'
 import './App.css'
 
 function App() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart()
+  const location = useLocation()
+
+  // Define routes where the Assistant should be hidden
+  const hideAssistantPaths = ['/cart', '/checkout', '/favorites', '/payment']
+  const isAdminPath = location.pathname.startsWith('/admin')
+  const shouldHideAssistant = isAdminPath || hideAssistantPaths.includes(location.pathname)
+
 
   return (
     <div className="app">
@@ -72,6 +80,7 @@ function App() {
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/addresses" element={<Addresses />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
                 </Route>
               </Routes>
             </main>
@@ -79,7 +88,7 @@ function App() {
           </>
         } />
       </Routes>
-      <Assistant />
+      {!shouldHideAssistant && <Assistant />}
     </div>
   )
 }

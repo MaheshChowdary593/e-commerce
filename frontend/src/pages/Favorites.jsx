@@ -1,5 +1,5 @@
-import React from 'react';
 import { useFavorites } from '../hooks/useFavorites';
+import { Heart } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../hooks/useCart';
 
@@ -21,7 +21,9 @@ const Favorites = () => {
         <div style={{ textAlign: 'center', padding: '60px 0' }}>Loading your favorites...</div>
       ) : favorites.length === 0 ? (
         <div className="no-favorites" style={{ textAlign: 'center', padding: '60px 20px', background: '#f9f9f9', borderRadius: '12px', border: '1px dashed #ccc' }}>
-          <div className="icon" style={{ fontSize: '3rem', marginBottom: '15px', opacity: 0.5 }}>❤️</div>
+          <div className="icon" style={{ marginBottom: '15px', opacity: 0.3 }}>
+            <Heart size={64} strokeWidth={1} />
+          </div>
           <p style={{ color: '#666', fontSize: '1.1rem' }}>You haven't favored any products yet.</p>
           <button className="btn btn-primary" onClick={() => window.location.href = '/'} style={{ marginTop: '20px' }}>Explore Products</button>
         </div>

@@ -206,6 +206,16 @@
   background: #fafafa;
 }
 
+.assistant-voice-btn {
+  padding: 8px !important;
+  color: #6b7280;
+}
+
+.assistant-voice-btn.listening {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+
 .assistant-input-area input {
   flex: 1;
   border: 1px solid #e5e7eb;

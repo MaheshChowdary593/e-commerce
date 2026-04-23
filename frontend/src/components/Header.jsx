@@ -1,9 +1,11 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useSearch } from '../hooks/useSearch';
 import { useApi } from '../hooks/useApi';
 import { useFavorites } from '../hooks/useFavorites';
+import VoiceSearchButton from './VoiceSearchButton';
 import './Header.css';
 
 const Header = ({ cartCount = 0, onCartClick }) => {
@@ -42,16 +44,25 @@ const Header = ({ cartCount = 0, onCartClick }) => {
   }, []);
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
+      // Direct search uses standard mode unless it's a long NLP-like query?
+      // For now, let's just use mode=ai for voice and explicit NLP queries
+      const mode = query.split(' ').length > 2 ? 'ai' : 'standard';
+      navigate(`/search?q=${encodeURIComponent(query)}${mode === 'ai' ? '&mode=ai' : ''}`);
       setShowHistory(false);
     }
   };
 
+  const handleVoiceTranscript = (transcript) => {
+    setQuery(transcript);
+    navigate(`/search?q=${encodeURIComponent(transcript)}&mode=ai`);
+  };
+
   const handleHistorySelect = (h) => {
     setQuery(h);
-    navigate(`/search?q=${encodeURIComponent(h)}`);
+    const mode = h.split(' ').length > 2 ? 'ai' : 'standard';
+    navigate(`/search?q=${encodeURIComponent(h)}${mode === 'ai' ? '&mode=ai' : ''}`);
     setShowHistory(false);
   };
 
@@ -69,16 +80,19 @@ const Header = ({ cartCount = 0, onCartClick }) => {
           <div className="logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}>Shopsea</div>
           <div className="search-container" ref={historyRef}>
             <form className="search-bar" onSubmit={handleSearchSubmit}>
-              <input 
+               <input 
                 type="text" 
-                placeholder="Search products, categories, and brands" 
+                placeholder="Try 'black shoes under 3000'..." 
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setShowHistory(true)}
               />
-              <button type="submit" className="search-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              </button>
+              <div className="search-actions">
+                <VoiceSearchButton onTranscript={handleVoiceTranscript} />
+                <button type="submit" className="search-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+              </div>
             </form>
             
             {showHistory && history.length > 0 && (
@@ -112,7 +126,7 @@ const Header = ({ cartCount = 0, onCartClick }) => {
             
             {user && (
               <Link to="/favorites" className="btn-favorites" title="My Favorites">
-                ❤️ {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
+                <Heart size={18} strokeWidth={2.5} /> {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
               </Link>
             )}
             
